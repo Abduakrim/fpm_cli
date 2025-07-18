@@ -23,7 +23,8 @@ Future<void> saveDB(Map<String, String> db) async {
 }
 
 void printUsage() {
-  printInfo('''
+  print(
+    '''
   ______   _____    __  __ 
  |  ____| |  __ \\  |  \\/  |
  | |__    | |__) | | \\  / |
@@ -38,8 +39,9 @@ Usage:
   fpm add <path>         Add a project manually
   fpm list               List all projects
   fpm open <project>     Open a project in VS Code
-  fpm remove <project>   Remove a project
-''');
+  fpm remove <project>   Remove a project from list
+'''.blue,
+  );
 }
 
 Future<bool> _isFlutterProject(File pubspec) async {
@@ -49,6 +51,14 @@ Future<bool> _isFlutterProject(File pubspec) async {
   } catch (_) {
     return false;
   }
+}
+
+void _printProgress(int current, int total) {
+  final percent = (current / total * 100).toStringAsFixed(1);
+  final barLength = 30;
+  final filled = ((current / total) * barLength).round();
+  final bar = '='.green * filled + '-' * (barLength - filled);
+  stdout.write('\r[$bar] $percent% ($current/$total)');
 }
 
 Future<void> scan() async {
@@ -64,21 +74,30 @@ Future<void> scan() async {
     if (Platform.isMacOS) '/Applications',
   ];
 
-  printInfo('🔍 Auto scanning folders:');
+  print('🔍 Auto scanning folders:'.blue);
   for (var path in defaultPaths) {
     final dir = Directory(path);
+
     if (!dir.existsSync()) continue;
 
-    printInfo('➡ Scanning: $path');
     try {
-      await for (var entity in dir.list(recursive: true, followLinks: false)) {
+      final allFiles =
+          await dir
+              .list(recursive: true, followLinks: false)
+              .where((entity) => entity is File)
+              .toList();
+
+      var total = allFiles.length;
+      var processed = 0;
+      for (var entity in allFiles) {
+        processed++;
+        _printProgress(processed, total);
         try {
           if (entity is File &&
               entity.path.endsWith('pubspec.yaml') &&
               await _isFlutterProject(entity)) {
             final name = entity.parent.path.split(Platform.pathSeparator).last;
             db[name] = entity.parent.path;
-            printSucces('🟢 Project found: $name → ${entity.parent.path}');
           }
         } catch (_) {
           continue;
@@ -88,34 +107,37 @@ Future<void> scan() async {
       continue;
     }
   }
-
+  stdout.writeln('\r');
+  for (var element in db.entries) {
+    print('🟢 ${element.key}:${element.value}'.green);
+  }
   await saveDB(db);
-  printInfo('📂 Scanning completed.');
+  print('📂 Scanning completed.'.blue);
 }
 
 Future<void> addProject(String path) async {
   final db = await loadDB();
   final dir = Directory(path);
   if (!await dir.exists()) {
-    printError('🔴 Folder not found');
+    print('🔴 Folder not found'.green);
     return;
   }
   final name = dir.path.split(Platform.pathSeparator).last;
   db[name] = dir.path;
   await saveDB(db);
-  printSucces('🟢 Project added: $name');
+  print('🟢 Project added: $name'.green);
 }
 
 Future<void> listProjects() async {
   final db = await loadDB();
   if (db.isEmpty) {
-    printInfo('No saved projects.');
+    print('No saved projects.'.blue);
     return;
   }
-  printInfo('📂 Saved projects:');
+  print('📂 Saved projects:'.blue);
   db.forEach((name, path) {
     if (!name.startsWith('__')) {
-      printInfo(' - $name → $path');
+      print(' - $name → $path'.blue);
     }
   });
 }
@@ -124,34 +146,34 @@ Future<void> openProject(String name) async {
   final db = await loadDB();
 
   if (!db.containsKey(name)) {
-    printError('🔴 Project "$name" not found in database');
+    print('🔴 Project "$name" not found in database'.red);
     return;
   }
 
   final projectPath =
       Platform.isWindows ? db[name]!.replaceAll('/', '\\') : db[name]!;
 
-  printInfo('🔍 Opening project: $name → $projectPath');
+  print('🔍 Opening project: $name → $projectPath'.blue);
 
   try {
     final vscodePath = findVSCodePath();
 
     if (vscodePath != null) {
       await Process.start(vscodePath, [projectPath], runInShell: true);
-      printSucces('🟢 Opened in VS Code: $name');
+      print('🟢 Opened in VS Code: $name'.green);
       return;
     }
 
     if (!Platform.isWindows) {
       await Process.start('code', [projectPath], runInShell: true);
-      printSucces('🟢 Opened in VS Code (code from PATH)');
+      print('🟢 Opened in VS Code (code from PATH)'.green);
       return;
     }
 
     await Process.run('cmd', ['/c', 'start', '', 'code', projectPath]);
-    printSucces('🟢 Opened in VS Code (cmd start)');
+    print('🟢 Opened in VS Code (cmd start)'.green);
   } catch (e) {
-    printError('🔴 Error while launching VS Code: $e');
+    print('🔴 Error while launching VS Code: $e'.red);
   }
 }
 
@@ -182,8 +204,8 @@ Future<void> removeProject(String name) async {
   final db = await loadDB();
   if (db.remove(name) != null) {
     await saveDB(db);
-    printSucces('🟢 Removed: $name');
+    print('🟢 Removed: $name'.green);
   } else {
-    printError('🔴 Project not found');
+    print('🔴 Project not found'.red);
   }
 }
