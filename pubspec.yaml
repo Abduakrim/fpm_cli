@@ -2,7 +2,7 @@ name: fpm_cli
 description: A command line tool for managing Flutter projects.
 executables:
   fpm: fpm
-version: 1.0.2
+version: 1.0.3
 repository: https://github.com/Abduakrim/fpm_cli
 
 environment:
