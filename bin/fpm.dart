@@ -1,4 +1,3 @@
-
 import 'package:fpm_cli/fpm.dart';
 
 void main(List<String> args) async {
@@ -9,27 +8,28 @@ void main(List<String> args) async {
 
   switch (args[0]) {
     case 'scan':
-      await scan();
+      await scanCommand();
       break;
     case 'add':
       if (args.length < 2) return printUsage();
-      await addProject(args[1]);
+      await addCommand(args[1]);
       break;
     case 'list':
-      await listProjects();
+      await listCommand();
       break;
     case 'open':
       if (args.length < 2) return printUsage();
       final projectName = args[1].trim();
-      await openProject(projectName);
+      await openCommand(projectName);
       break;
 
     case 'remove':
       if (args.length < 2) return printUsage();
-      await removeProject(args[1]);
+      await removeCommand(args[1]);
       break;
+    case 'recent':
+       await recentCommand();
     default:
       printUsage();
   }
 }
-
