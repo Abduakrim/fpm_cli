@@ -10,7 +10,6 @@ environment:
 
 dependencies:
   path: ^1.8.0
-  hive: ^2.2.3
 
 dev_dependencies:
   lints: ^5.0.0

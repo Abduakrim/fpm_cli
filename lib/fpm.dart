@@ -1,9 +1,22 @@
 #!/usr/bin/env dart
 
-import 'scanner.dart';
+import 'package:fpm_cli/color_utils.dart';
 
+import 'scanner.dart';
 void printUsage() => print('''
 FPM - Flutter Project Manager
+                                  .         .           
+8 8888888888   8 888888888o      ,8.       ,8.          
+8 8888         8 8888    `88.   ,888.     ,888.         
+8 8888         8 8888     `88  .`8888.   .`8888.        
+8 8888         8 8888     ,88 ,8.`8888. ,8.`8888.       
+8 888888888888 8 8888.   ,88',8'8.`8888,8^8.`8888.      
+8 8888         8 888888888P',8' `8.`8888' `8.`8888.     
+8 8888         8 8888      ,8'   `8.`88'   `8.`8888.    
+8 8888         8 8888     ,8'     `8.`'     `8.`8888.   
+8 8888         8 8888    ,8'       `8        `8.`8888.  
+8 8888         8 8888   ,8'         `         `8.`8888. 
+
 Usage:
   fpm scan
   fpm add <path>
@@ -12,7 +25,7 @@ Usage:
   fpm remove <project>
   fpm recent
   fpm search <keyword>
-''');
+'''.blue);
 
 Future<void> scanCommand() async => await scan();
 

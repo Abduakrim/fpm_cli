@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fpm_cli/color_utils.dart';
@@ -58,10 +59,16 @@ Future<void> scan() async {
 
   print('🔍 Scanning for Flutter projects...'.blue);
 
+  final loadingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  var i = 0;
+
+  Timer? spinner = Timer.periodic(Duration(milliseconds: 100), (_) {
+    stdout.write('\r${loadingChars[i++ % loadingChars.length]} Scanning...');
+  });
+
   for (var basePath in paths) {
     final dir = Directory(basePath);
     if (!dir.existsSync()) continue;
-    print('📂 Scanning: $basePath'.blue);
 
     List<FileSystemEntity> list;
     try {
@@ -98,13 +105,17 @@ Future<void> scan() async {
             'last_scanned': DateTime.now().toIso8601String(),
             'last_opened': existing?['last_opened'] ?? '',
           };
+          stdout.write('\r');
           print('🟢 Found: $projectName → $projectPath'.green);
         }
       }),
     );
   }
+
+  spinner.cancel();
+  stdout.write('\r');
+  print('✅ Scanning completed.'.blue);
   await saveDB(db);
-  print('🟢 Scanning completed.'.blue);
 }
 
 Future<void> addProject(String path) async {
